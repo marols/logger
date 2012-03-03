@@ -1,13 +1,11 @@
 #include <Wire.h>
 #include <SPI.h>
-#include <SD.h>
 #include "logger.h"
 
 const int  cs=48; //chip select
 const unsigned int reads_per_sec = 8927;
 
 // Configurations
-const int chipSelect = 8;
 const int nbr_sensors = 2;  // Must be the length of the pins array
 const unsigned int seconds_per_logentry = 5;
 const int pins[nbr_sensors] = {0, 1};  // Analog pins
