@@ -2,7 +2,7 @@
 #include <SPI.h>
 #include "logger.h"
 
-const int  cs=48; //chip select
+const int  cs = 48; //chip select
 const unsigned int reads_per_sec = 8927;
 
 // Configurations
@@ -16,7 +16,7 @@ void setup()
   Serial.begin(9600);
 
   // Writer Initialization
-  Wire.begin(); // join i2c bus (address optional for master)
+  Wire.begin();  // Join i2c bus (address optional for master)
   pinMode(13, OUTPUT);
   RTC_init();
 
@@ -49,7 +49,7 @@ Stat stat_pin(const int pin)
   for (int i = 0; i < seconds_per_logentry; i++) {
     /*
      * Sums up reads_per_sec reads and then calculates the avg to avoid
-     * expensive divition
+     * expensive divition.
      */
     sum = 0;
     for (o = 0; o < reads_per_sec; o++) {
@@ -90,7 +90,6 @@ void keepAlive()
 void writeLineEnding(int address)
 {
   Wire.beginTransmission(address);
-  //Wire.write('\n');
   Wire.write(';');
   Wire.endTransmission();
 }
@@ -98,11 +97,11 @@ void writeLineEnding(int address)
 //=====================================
 void writeString(int address, String message)
 {
-  char msg[message.length()+1];
-  message.toCharArray(msg, message.length()+1);
+  char msg[message.length() + 1];
+  message.toCharArray(msg, message.length() + 1);
 
   int ix = 0;
-  int maxIx = strlen(msg)/sizeof(char);
+  int maxIx = strlen(msg) / sizeof(char);
 
   while(ix < maxIx) {
 
@@ -137,22 +136,25 @@ int RTC_init()
 //=====================================
 int SetTimeDate(int d, int mo, int y, int h, int mi, int s)
 {
-  int TimeDate [7]={s, mi, h, 0, d, mo, y};
-  for(int i=0; i<=6;i++){
-    if(i==3)
+  int a,b;  // TODO: rename those to better names
+  int TimeDate[7] = {s, mi, h, 0, d, mo, y};
+  for (int i = 0; i <= 6; i++) {
+    if (i == 3) {
       i++;
-    int b= TimeDate[i]/10;
-    int a= TimeDate[i]-b*10;
-    if(i==2){
-      if (b==2)
-        b=B00000010;
-      else if (b==1)
-        b=B00000001;
     }
-    TimeDate[i]= a+(b<<4);
+    b = TimeDate[i] / 10;
+    a = TimeDate[i] - (b * 10);
+    if (i == 2) {
+      if (b == 2) {
+        b = B00000010;
+      } else if (b == 1) {
+        b = B00000001;
+      }
+    }
+    TimeDate[i] = a + (b << 4);
 
     digitalWrite(cs, LOW);
-    SPI.transfer(i+0x80);
+    SPI.transfer(i + 0x80);
     SPI.transfer(TimeDate[i]);
     digitalWrite(cs, HIGH);
   }
@@ -170,57 +172,57 @@ String AddLeadingZeroes(int time)
 String ReadTimeDate()
 {
   String temp;
-  int TimeDate [7]; //second,minute,hour,null,day,month,year
-  for(int i=0; i<=6;i++){
-    if(i==3)
+  int a, b;  // TODO: rename those to better names
+  int TimeDate[7];  // Second, minute, hour, null, day, month, year
+
+  for (int i = 0; i <= 6; i++) {
+    if (i == 3) {
       i++;
+    }
     digitalWrite(cs, LOW);
-    SPI.transfer(i+0x00);
+    SPI.transfer(i + 0x00);
     unsigned int n = SPI.transfer(0x00);
     digitalWrite(cs, HIGH);
-    int a=n & B00001111;
-    if(i==2){
-      int b=(n & B00110000)>>4; //24 hour mode
-      if(b==B00000010)
-        b=20;
-      else if(b==B00000001)
-        b=10;
-      TimeDate[i]=a+b;
-    }
-    else if(i==4){
-      int b=(n & B00110000)>>4;
-      TimeDate[i]=a+b*10;
-    }
-    else if(i==5){
-      int b=(n & B00010000)>>4;
-      TimeDate[i]=a+b*10;
-    }
-    else if(i==6){
-      int b=(n & B11110000)>>4;
-      TimeDate[i]=a+b*10;
-    }
-    else{
-      int b=(n & B01110000)>>4;
-      TimeDate[i]=a+b*10;
+    a = n & B00001111;
+    if (i == 2) {
+      b = (n & B00110000) >> 4;  // 24 hour mode
+      if (b == B00000010) {
+        b = 20;
+      } else if (b == B00000001) {
+        b = 10;
       }
+      TimeDate[i] = a + b;
+    } else if (i == 4) {
+      b = (n & B00110000) >> 4;
+      TimeDate[i] = a + b * 10;
+    } else if (i == 5) {
+      b = (n & B00010000) >> 4;
+      TimeDate[i] = a + b * 10;
+    } else if (i == 6) {
+      b = (n & B11110000) >> 4;
+      TimeDate[i] = a + b * 10;
+    } else {
+      b = (n & B01110000) >> 4;
+      TimeDate[i] = a + b * 10;
+    }
   }
 
   String str;
   str = AddLeadingZeroes(TimeDate[6]);
   temp.concat(str);
-  temp.concat("/") ;
+  temp.concat("/");
   str = AddLeadingZeroes(TimeDate[5]);
   temp.concat(str);
-  temp.concat("/") ;
+  temp.concat("/");
   str = AddLeadingZeroes(TimeDate[4]);
   temp.concat(str);
-  temp.concat("    ") ;
+  temp.concat("    ");
   str = AddLeadingZeroes(TimeDate[2]);
   temp.concat(str);
-  temp.concat(":") ;
+  temp.concat(":");
   str = AddLeadingZeroes(TimeDate[1]);
   temp.concat(str);
-  temp.concat(":") ;
+  temp.concat(":");
   str = AddLeadingZeroes(TimeDate[0]);
   temp.concat(str);
 
